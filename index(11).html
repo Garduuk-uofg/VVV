@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Voice Archive</title>
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES
+    ============================================================ */
+    :root {
+      --background: #ffffff;
+      --foreground: #0a0a0f;
+      --card: #ffffff;
+      --primary: #030213;
+      --primary-fg: #ffffff;
+      --muted: #ececf0;
+      --muted-fg: #717182;
+      --border: rgba(0, 0, 0, 0.1);
+      --radius: 0.625rem;
+
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+
+      --blue-600:    #2563eb;
+      --emerald-600: #059669;
+      --amber-600:   #d97706;
+      --purple-600:  #9333ea;
+      --pink-600:    #db2777;
+      --red-600:     #dc2626;
+      --indigo-600:  #4f46e5;
+      --rose-600:    #e11d48;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { background: var(--background); color: var(--foreground); line-height: 1.5; }
+
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { cursor: pointer; font-family: inherit; font-size: 1rem; }
+    input, select { font-family: inherit; }
+    img { display: block; max-width: 100%; }
+
+    h1 { font-size: 1.5rem;   font-weight: 500; line-height: 1.3; }
+    h2 { font-size: 1.25rem;  font-weight: 500; line-height: 1.3; }
+    h3 { font-size: 1.125rem; font-weight: 500; line-height: 1.3; }
+    h4 { font-size: 1rem;     font-weight: 500; line-height: 1.3; }
+    p  { font-size: 1rem;     line-height: 1.6; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* ============================================================
+       PAGE SWITCHING
+    ============================================================ */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+    }
+    .site-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .site-logo svg { width: 2rem; height: 2rem; flex-shrink: 0; }
+    .logo-title { font-size: 1.25rem; font-weight: 500; }
+    .logo-sub { font-size: 0.75rem; color: var(--muted-fg); }
+
+    .site-nav {
+      display: none;
+      align-items: center;
+      gap: 1.5rem;
+      margin-left: auto;
+    }
+    @media (min-width: 768px) { .site-nav { display: flex; } }
+    .site-nav a,
+    .site-nav button {
+      font-size: 0.875rem;
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      cursor: pointer;
+    }
+    .site-nav a:hover,
+    .site-nav button:hover { text-decoration: underline; }
+
+    .menu-btn {
+      background: none;
+      border: none;
+      padding: 0.4rem;
+      display: flex;
+      align-items: center;
+      color: inherit;
+    }
+    @media (min-width: 768px) { .menu-btn { display: none; } }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      padding: 0 1rem 1rem;
+      gap: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a,
+    .mobile-menu button {
+      font-size: 0.875rem;
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      padding: 0.25rem 0;
+    }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-outline  { background: #fff; color: var(--foreground); border-color: var(--border); }
+    .btn-outline:hover  { background: var(--slate-50); }
+    .btn-ghost   { background: transparent; border-color: transparent; }
+    .btn-ghost:hover   { background: #e9ebef; }
+    .btn-icon    { padding: 0.35rem; border-radius: 50%; width: 2rem; height: 2rem; }
+    .btn-sm      { padding: 0.25rem 0.75rem; font-size: 0.8125rem; }
+
+    /* ============================================================
+       BADGES
+    ============================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      line-height: 1.4;
+    }
+    .badge-solid   { background: var(--primary); color: #fff; }
+    .badge-outline { background: transparent; border-color: var(--border); }
+    .badge-filter  { cursor: pointer; padding: 0.3rem 0.875rem; transition: all 0.15s; }
+    .badge-filter:hover:not(.active) { background: var(--slate-100); }
+    .badge-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ============================================================
+       CARDS
+    ============================================================ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.09); }
+    .card-content { padding: 1.5rem; }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      background: linear-gradient(to bottom, var(--slate-50), #fff);
+      padding: 4rem 0;
+    }
+    @media (min-width: 768px) { .hero { padding: 6rem 0; } }
+    .hero-inner { max-width: 56rem; margin: 0 auto; text-align: center; }
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 500;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    .hero-desc {
+      color: var(--muted-fg);
+      margin-bottom: 2rem;
+      font-size: 1.125rem;
+      max-width: 42rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-search {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      color: var(--muted-fg);
+      pointer-events: none;
+    }
+    .text-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--slate-50);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .text-input:focus { border-color: var(--slate-400); background: #fff; }
+
+    /* ============================================================
+       SEARCH RESULTS (HOME)
+    ============================================================ */
+    .search-results-section { background: var(--slate-50); padding: 3rem 0; display: none; }
+    .search-results-section.visible { display: block; }
+    .search-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted-fg);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+    .search-label svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+    .results-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .results-heading { font-size: 1.875rem; font-weight: 500; }
+    .results-sub { color: var(--muted-fg); margin-bottom: 2rem; }
+    .clear-search-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8125rem;
+      color: var(--muted-fg);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.3rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .clear-search-btn:hover { color: var(--foreground); border-color: var(--slate-400); background: var(--slate-50); }
+    .home-no-results { text-align: center; padding: 3rem 0; color: var(--muted-fg); }
+
+    .grid-3up {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) { .grid-3up { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid-3up { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ============================================================
+       BROWSE BY COLLECTION
+    ============================================================ */
+    .collections-section { background: #fff; padding: 4rem 0; }
+    .section-header { text-align: center; margin-bottom: 3rem; }
+    .section-title { font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 500; margin-bottom: 0.75rem; }
+    .section-sub { color: var(--muted-fg); max-width: 42rem; margin: 0 auto; }
+
+    .grid-cat {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 768px) { .grid-cat { grid-template-columns: repeat(4, 1fr); } }
+
+    .cat-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.09); }
+    .cat-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--slate-50);
+      margin-bottom: 0.75rem;
+      transition: background 0.15s;
+    }
+    .cat-card:hover .cat-icon-wrap { background: var(--slate-100); }
+    .cat-icon-wrap svg { width: 1.5rem; height: 1.5rem; }
+    .cat-name { font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .cat-count-label { font-size: 0.875rem; color: var(--muted-fg); }
+
+    /* ============================================================
+       FEATURED VOICES TABS
+    ============================================================ */
+    .featured-section { background: var(--slate-50); padding: 4rem 0; }
+    .tabs-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .tabs-list {
+      display: inline-flex;
+      background: var(--muted);
+      border-radius: var(--radius);
+      padding: 0.25rem;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 0.375rem 1rem;
+      border-radius: calc(var(--radius) - 2px);
+      background: transparent;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted-fg);
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--foreground);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid-4up {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px)  { .grid-4up { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid-4up { grid-template-columns: repeat(4, 1fr); } }
+
+    /* ============================================================
+       VOICE CARD
+    ============================================================ */
+    .voice-card {
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .vc-header { padding: 1.5rem 1.5rem 0; }
+    .vc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .vc-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .vc-speaker { font-size: 0.875rem; color: var(--muted-fg); }
+    .vc-body { padding: 1rem 1.5rem 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .vc-desc {
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .vc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted-fg);
+    }
+    .vc-meta span { display: flex; align-items: center; gap: 0.3rem; }
+    .vc-meta svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .site-footer { background: var(--slate-900); color: #fff; padding: 3rem 0; }
+    .footer-grid {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 768px) { .footer-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .footer-brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .footer-brand svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+    .footer-brand span { font-weight: 500; }
+    .footer-desc { font-size: 0.875rem; color: #cbd5e1; line-height: 1.6; }
+    .footer-heading { font-size: 1rem; font-weight: 500; margin-bottom: 1rem; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .footer-links a { font-size: 0.875rem; color: #cbd5e1; }
+    .footer-links a:hover { color: #fff; text-decoration: none; }
+    .footer-email-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .footer-email-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .footer-email-input::placeholder { color: #94a3b8; }
+    .footer-bottom {
+      border-top: 1px solid #1e293b;
+      padding-top: 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    /* ============================================================
+       BROWSE PAGE
+    ============================================================ */
+    .browse-bg { background: var(--slate-50); min-height: 100vh; }
+    .browse-header-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 2rem 0; }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--foreground); }
+    .browse-title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 500; margin-bottom: 0.75rem; }
+    .browse-desc { color: var(--muted-fg); max-width: 48rem; }
+
+    .browse-filter-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      position: sticky;
+      top: 73px;
+      z-index: 40;
+    }
+    .filter-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .filter-row { flex-direction: row; align-items: center; justify-content: space-between; }
+    }
+    .search-filter-wrap { flex: 1; max-width: 28rem; position: relative; }
+    .search-filter-wrap .search-icon {
+      position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+      width: 1rem; height: 1rem; color: var(--muted-fg); pointer-events: none;
+    }
+    .filter-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .filter-input:focus { border-color: var(--slate-400); }
+
+    .sort-row { display: flex; align-items: center; gap: 0.5rem; }
+    .sort-select {
+      padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23717182' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.5rem center;
+      background-size: 1rem;
+    }
+
+    .cat-filter-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .cat-filter-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.875rem; margin-bottom: 0.75rem; color: var(--muted-fg);
+    }
+    .cat-filter-label svg { width: 1rem; height: 1rem; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .results-area { padding: 2rem 0; }
+    .results-count-text { color: var(--muted-fg); margin-bottom: 1.5rem; }
+
+    .voices-grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px)  { .voices-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .voices-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1280px) { .voices-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .no-results { text-align: center; padding: 4rem 1rem; }
+    .no-results p { color: var(--muted-fg); margin-bottom: 1rem; }
+
+    /* ============================================================
+       DETAIL PAGE
+    ============================================================ */
+    .detail-bg { background: var(--slate-50); min-height: 100vh; }
+    .detail-nav-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .detail-hero-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 3rem 0; }
+    .detail-inner { max-width: 48rem; }
+    .detail-title { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 500; margin: 0.75rem 0; }
+    .detail-speaker { font-size: 1.25rem; color: var(--muted-fg); margin-bottom: 1.5rem; }
+
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      margin-bottom: 1.5rem;
+    }
+    .detail-meta span { display: flex; align-items: center; gap: 0.4rem; }
+    .detail-meta svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+    .separator { height: 1px; background: var(--border); margin: 1.5rem 0; }
+    .detail-desc { color: var(--muted-fg); line-height: 1.75; margin-bottom: 1.5rem; }
+    .detail-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .detail-section { padding: 3rem 0; }
+    .detail-section.bg-white { background: #fff; }
+    .detail-section-wrap { max-width: 56rem; margin: 0 auto; }
+    .detail-section-title { font-size: 1.5rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .detail-title-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;
+    }
+    .detail-title-row svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .detail-title-row h2 { margin-bottom: 0; }
+
+    /* ---- Audio Player ---- */
+    .audio-player {
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .ap-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+    .ap-title { font-weight: 500; margin-bottom: 0.25rem; font-size: 1rem; }
+    .ap-sub { font-size: 0.875rem; color: var(--muted-fg); }
+    .ap-actions { display: flex; gap: 0.25rem; }
+
+    .ap-controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+    .ap-play-btn {
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      background: var(--primary); color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: opacity 0.15s;
+    }
+    .ap-play-btn:hover { opacity: 0.85; }
+    .ap-play-btn svg { width: 1rem; height: 1rem; }
+
+    .ap-progress-wrap { flex: 1; }
+    .ap-bar {
+      width: 100%; height: 0.375rem; background: var(--slate-200);
+      border-radius: 9999px; cursor: pointer; position: relative; margin-bottom: 0.4rem;
+    }
+    .ap-fill {
+      height: 100%; background: var(--primary); border-radius: 9999px;
+      width: 0%; transition: width 0.1s linear;
+      pointer-events: none;
+    }
+    .ap-time { font-size: 0.75rem; color: var(--muted-fg); }
+
+    .ap-volume-row { display: flex; align-items: center; gap: 0.5rem; }
+    .ap-volume-row svg { width: 1rem; height: 1rem; color: var(--muted-fg); }
+    .volume-slider { width: 6rem; cursor: pointer; accent-color: var(--primary); }
+    .ap-note { font-size: 0.75rem; color: var(--muted-fg); font-style: italic; margin-top: 0.75rem; }
+
+    /* ---- Spec Table ---- */
+    .spec-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
+    .spec-header svg { width: 1.25rem; height: 1.25rem; color: var(--blue-600); margin-top: 0.125rem; flex-shrink: 0; }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 2rem;
+    }
+    @media (min-width: 768px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 0.9375rem;
+    }
+    .spec-label { color: var(--muted-fg); }
+
+    /* ---- Usage ---- */
+    .usage-block { margin-bottom: 1rem; }
+    .usage-block h3 { font-size: 1rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .usage-block p { font-size: 0.875rem; color: var(--muted-fg); }
+
+    /* ---- Historical context ---- */
+    .history-text p { color: var(--muted-fg); line-height: 1.75; }
+    .history-text p + p { margin-top: 1rem; }
+
+    /* ============================================================
+       ICON COLOR HELPERS
+    ============================================================ */
+    .ic-blue    { color: var(--blue-600);    }
+    .ic-emerald { color: var(--emerald-600); }
+    .ic-amber   { color: var(--amber-600);   }
+    .ic-purple  { color: var(--purple-600);  }
+    .ic-pink    { color: var(--pink-600);    }
+    .ic-red     { color: var(--red-600);     }
+    .ic-indigo  { color: var(--indigo-600);  }
+    .ic-rose    { color: var(--rose-600);    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     HEADER (always visible)
+================================================================ -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-inner">
+
+      <!-- Logo -->
+      <div class="site-logo" onclick="nav('home')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="5" x="2" y="3" rx="1"/>
+          <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+          <path d="M10 12h4"/>
+        </svg>
+        <div>
+          <div class="logo-title">Virtual Voice Archive</div>
+          <div class="logo-sub">Preserving Digital Voices for anyone to use</div>
+        </div>
+      </div>
+
+      <!-- Desktop nav -->
+      <nav class="site-nav">
+        <button onclick="nav('browse')">Browse</button>
+        <a href="#" onclick="nav('about');return false">About</a>
+        <a href="#" onclick="nav('contribute');return false">Contribute</a>
+      </nav>
+
+      <!-- Mobile menu toggle -->
+      <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="6"  y2="6"/>
+          <line x1="4" x2="20" y1="12" y2="12"/>
+          <line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile nav drawer -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button onclick="nav('browse'); closeMobileMenu()">Browse</button>
+      <a href="#" onclick="nav('about'); closeMobileMenu(); return false">About</a>
+      <a href="#" onclick="nav('contribute'); closeMobileMenu(); return false">Contribute</a>
+    </div>
+  </div>
+</header>
+
+
+<!-- ================================================================
+     HOME PAGE
+================================================================ -->
+<main id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <h1 class="hero-title">Preserving Synthetic Voices</h1>
+        <p class="hero-desc">
+          A digital archive dedicated to conserving TTS models, voices, and virtual assistants
+          before they're updated, deprecated, or lost forever. Every synthetic voice is a piece of digital history.
+        </p>
+        <div class="hero-search">
+          <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="text-input" id="heroSearchInput" type="text" placeholder="Search voices, languages, or models..."
+              onkeydown="if(event.key==='Enter') heroSearch()" />
+          </div>
+          <button class="btn btn-primary" onclick="heroSearch()">Search</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Results (hidden until a search is performed) -->
+  <section class="search-results-section" id="homeSearchSection">
+    <div class="container">
+      <div class="search-label">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <span>Search Results</span>
+      </div>
+      <div class="results-heading-row">
+        <h2 class="results-heading" id="homeSearchHeading"></h2>
+        <button class="clear-search-btn" onclick="clearHeroSearch()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+          Clear search
+        </button>
+      </div>
+      <p class="results-sub" id="homeSearchSub"></p>
+      <div class="grid-3up" id="homeSearchGrid"></div>
+      <div class="home-no-results" id="homeNoResults" style="display:none">
+        <p>No voices found for that query. Try a different term.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Browse by Collection -->
+  <section class="collections-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Collection</h2>
+        <p class="section-sub">Explore our carefully curated collections of synthetic voices, TTS systems, and voice models</p>
+      </div>
+      <div class="grid-cat" id="homeCatGrid"></div>
+    </div>
+  </section>
+
+  <!-- Featured Voices / Tabs -->
+  <section class="featured-section">
+    <div class="container">
+      <div class="tabs-header">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.5rem">Voice Spotlight</h2>
+          <p style="color:var(--muted-fg);font-size:0.875rem">A random selection of voices drawn from every category in the archive</p>
+        </div>
+        <div class="tabs-list">
+          <button class="tab-btn active" id="tabFeatured" onclick="switchTab('featured')">Featured</button>
+          <button class="tab-btn"        id="tabRecent"   onclick="switchTab('recent')">Recently Added</button>
+        </div>
+      </div>
+
+      <div class="tab-panel active" id="panelFeatured">
+        <div class="grid-4up" id="featuredGrid"></div>
+      </div>
+      <div class="tab-panel" id="panelRecent">
+        <div class="grid-4up" id="recentGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="5" x="2" y="3" rx="1"/>
+              <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+              <path d="M10 12h4"/>
+            </svg>
+            <span>Synthetic Voice Archive</span>
+          </div>
+          <p class="footer-desc">Dedicated to preserving Virtual Voices before they're lost.</p>
+        </div>
+        <div>
+          <h4 class="footer-heading">Explore</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="nav('browse');return false">Browse Collections</a></li>
+            <li><a href="#">Search Archive</a></li>
+            <li><a href="#">Recent Additions</a></li>
+            <li><a href="#">Featured Voices</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">Contribute</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="nav('contribute');return false">Submit a Voice</a></li>
+            <li><a href="#" onclick="nav('contribute');return false">Guidelines</a></li>
+            <li><a href="#">Support Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">About</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="nav('about');return false">About the Archive</a></li>
+            <li><a href="#" onclick="nav('about');return false">Preservation Mission</a></li>
+            <li><a href="#" onclick="nav('contribute');return false">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Synthetic Voice Archive. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</main><!-- end #page-home -->
+
+
+<!-- ================================================================
+     BROWSE PAGE
+================================================================ -->
+<main id="page-browse" class="page">
+  <div class="browse-bg">
+
+    <!-- Header bar -->
+    <div class="browse-header-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('home')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Home
+        </button>
+        <h1 class="browse-title">Browse Archive</h1>
+        <p class="browse-desc">
+          Explore the complete archive. Browse 91 preserved voice systems across seven language families and four decades of speech synthesis history — from formant engines and DOS-era TTS to modern open-source neural models.
+        </p>
+      </div>
+    </div>
+
+    <!-- Search + Sort (sticky) -->
+    <div class="browse-filter-bar">
+      <div class="container">
+        <div class="filter-row">
+          <div class="search-filter-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="filter-input" id="browseSearchInput" type="text"
+              placeholder="Search voices, speakers, or descriptions..."
+              oninput="renderBrowseGrid()" />
+          </div>
+          <div class="sort-row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-fg);flex-shrink:0">
+              <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/>
+              <line x1="21" x2="12" y1="12" y2="12"/><line x1="8"  x2="3" y1="12" y2="12"/>
+              <line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/>
+              <line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/>
+              <line x1="16" x2="16" y1="18" y2="22"/>
+            </svg>
+            <select class="sort-select" id="browseSortSelect" onchange="renderBrowseGrid()">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Name (A–Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category filter badges -->
+    <div class="cat-filter-bar">
+      <div class="container">
+        <div class="cat-filter-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          <span>Filter by Category:</span>
+        </div>
+        <div class="badge-row" id="browseBadgeRow"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area">
+      <div class="container">
+        <p class="results-count-text" id="browseCount"></p>
+        <div class="voices-grid" id="browseGrid"></div>
+        <div class="no-results" id="browseNoResults" style="display:none">
+          <p>No voices found matching your criteria.</p>
+          <button class="btn btn-outline" onclick="clearBrowse()">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-browse -->
+
+
+<!-- ================================================================
+     DETAIL PAGE
+================================================================ -->
+<main id="page-detail" class="page">
+  <div class="detail-bg">
+
+    <!-- Back nav -->
+    <div class="detail-nav-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('browse')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Browse
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero info -->
+    <div class="detail-hero-bar">
+      <div class="container">
+        <div class="detail-inner">
+          <span class="badge badge-solid" id="dCategory"></span>
+          <h1 class="detail-title" id="dTitle"></h1>
+          <p class="detail-speaker" id="dSpeaker"></p>
+          <div class="detail-meta">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2v4"/><path d="M16 2v4"/>
+                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                <path d="M3 10h18"/>
+              </svg>
+              <span id="dDate"></span>
+            </span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span id="dDuration"></span>
+            </span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span id="dLocation"></span>
+            </span>
+          </div>
+          <div class="separator"></div>
+          <p class="detail-desc" id="dDesc"></p>
+          <div class="detail-actions">
+            <button class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              Download Sample
+            </button>
+            <button class="btn btn-outline">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                <line x1="15.41" x2="8.59" y1="6.51"  y2="10.49"/>
+              </svg>
+              Share
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="detail-section bg-white">
+      <div class="container">
+        <div style="max-width:42rem;margin:0 auto">
+          <h2 class="detail-section-title">Voice Sample</h2>
+          <div class="audio-player">
+            <div class="ap-top">
+              <div>
+                <div class="ap-title" id="apTitle"></div>
+                <div class="ap-sub"   id="apSub"></div>
+              </div>
+              <div class="ap-actions">
+                <button class="btn btn-ghost btn-icon" title="Share">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                    <line x1="15.41" x2="8.59" y1="6.51"  y2="10.49"/>
+                  </svg>
+                </button>
+                <button class="btn btn-ghost btn-icon" title="Download">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" x2="12" y1="15" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="ap-controls">
+              <button class="ap-play-btn" id="apPlayBtn" onclick="togglePlay()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="6 3 20 12 6 21 6 3"/>
+                </svg>
+              </button>
+              <div class="ap-progress-wrap">
+                <div class="ap-bar" id="apBar" onclick="seekAudio(event)">
+                  <div class="ap-fill" id="apFill"></div>
+                </div>
+                <div class="ap-time" id="apTime">0:00 / 0:45</div>
+              </div>
+            </div>
+
+            <div class="ap-volume-row">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <input class="volume-slider" type="range" min="0" max="100" value="70" />
+            </div>
+
+            <p class="ap-note">Note: This is a simulated player. Real audio samples would be linked here in the deployed archive.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="detail-section">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <h2 class="detail-section-title">Technical Specifications</h2>
+          <div class="card">
+            <div class="card-content">
+              <div class="spec-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                  <path d="M15 2v2M15 20v2M2 15h2M20 15h2M9 2v2M9 20v2M2 9h2M20 9h2"/>
+                </svg>
+                <h3>Engine Details</h3>
+              </div>
+              <div class="spec-grid">
+                <div class="spec-row">
+                  <span class="spec-label">Category</span>
+                  <span id="specCategory"></span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Platform</span>
+                  <span id="specPlatform"></span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Format</span>
+                  <span>WAV, 44.1 kHz</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Bit Depth</span>
+                  <span>16-bit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Context -->
+    <div class="detail-section bg-white">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <div class="detail-title-row">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <h2 class="detail-section-title">Historical Context</h2>
+          </div>
+          <div class="card">
+            <div class="card-content history-text">
+              <p>
+                Piper TTS represents an important milestone in open-source neural text-to-speech technology.
+                Developed as a fast, local, and privacy-focused alternative to cloud-based TTS services,
+                Piper brings high-quality neural voice synthesis to edge devices and offline applications.
+              </p>
+              <p>
+                Each Piper voice model is trained on carefully curated datasets, supporting over 40 languages
+                with varying quality levels optimized for different use cases — from resource-constrained IoT
+                devices to high-fidelity audiobook narration. The project emphasizes accessibility, enabling
+                developers to integrate natural-sounding speech synthesis without relying on proprietary cloud
+                services.
+              </p>
+              <p>
+                Preserving these voice models ensures continued access to open-source TTS technology and
+                documents the evolution of community-driven neural voice synthesis systems.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage & Compatibility -->
+    <div class="detail-section">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <h2 class="detail-section-title">Usage &amp; Compatibility</h2>
+          <div class="card">
+            <div class="card-content">
+              <div class="usage-block">
+                <h3>Original Platform</h3>
+                <p id="usagePlatform"></p>
+              </div>
+              <div class="separator"></div>
+              <div class="usage-block">
+                <h3>Modern Usage</h3>
+                <p>These samples are provided for educational, research, and preservation purposes.
+                   For modern projects requiring similar voice characteristics, consider using contemporary
+                   TTS engines with appropriate licensing.</p>
+              </div>
+              <div class="separator"></div>
+              <div class="usage-block">
+                <h3>Attribution</h3>
+                <p id="usageAttribution"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-detail -->
+
+
+<!-- ================================================================
+     CONTRIBUTE PAGE
+================================================================ -->
+<main id="page-contribute" class="page">
+  <div class="browse-bg" style="min-height:100vh">
+
+    <div class="browse-header-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('home')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Home
+        </button>
+        <h1 class="browse-title">Contribute</h1>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:3rem 0">
+      <div class="container">
+        <div style="max-width:42rem">
+          <div style="display:flex;align-items:center;gap:0.5rem;color:var(--muted-fg);font-size:0.875rem;margin-bottom:0.75rem">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <span>Help grow the archive</span>
+          </div>
+          <h1 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:500;margin-bottom:1rem">Submit a Voice</h1>
+          <p style="color:var(--muted-fg);font-size:1.0625rem;line-height:1.75">
+            The Virtual Voice Archive depends on contributions from the community to grow and stay complete. If you have a virtual voice that you'd like to see preserved here, we want to hear from you.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:3rem 0">
+      <div class="container">
+        <div style="max-width:42rem;margin:0 auto">
+
+          <div class="card" style="margin-bottom:2rem">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue-600);flex-shrink:0">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">How to Submit</h2>
+              </div>
+              <p style="color:var(--muted-fg);line-height:1.75;margin-bottom:1.25rem">
+                Send an email to the archive with any voices you'd like to contribute. Please include as much detail as you have — the voice name, the system it belongs to, the language, the original release date, and any sample audio files or download links you're able to share.
+              </p>
+              <p style="color:var(--muted-fg);line-height:1.75;margin-bottom:1.75rem">
+                All submissions are reviewed before being added to the archive. There are no strict formatting requirements — whatever you can provide is helpful. Even a name and a brief description goes a long way toward preservation.
+              </p>
+              <a href="mailto:Garduuk@gmail.com" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--primary);color:#fff;padding:0.625rem 1.25rem;border-radius:var(--radius);font-size:0.9375rem;font-weight:500;text-decoration:none;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                Send to Garduuk@gmail.com
+              </a>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:2rem">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--emerald-600);flex-shrink:0">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">What We Accept</h2>
+              </div>
+              <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.625rem">
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">Neural voice models</li>
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">Deprecated or discontinued voice systems</li>
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">Voices in any language or region</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--amber-600);flex-shrink:0">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">Helpful Information to Include</h2>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem">
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Voice or model name</div>
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Parent system or engine</div>
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Language &amp; region</div>
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Original release date</div>
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Sample audio or download link</div>
+                <div style="font-size:0.875rem;color:var(--muted-fg);padding:0.4rem 0;border-bottom:1px solid var(--slate-100)">Any historical context</div>
+              </div>
+              <p style="font-size:0.8125rem;color:var(--muted-fg);margin-top:1.25rem;font-style:italic">
+                None of these fields are required — send whatever you have.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-contribute -->
+
+
+<!-- ================================================================
+     ABOUT PAGE
+================================================================ -->
+<main id="page-about" class="page">
+  <div class="browse-bg" style="min-height:100vh">
+
+    <div class="browse-header-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('home')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Home
+        </button>
+        <h1 class="browse-title">About</h1>
+      </div>
+    </div>
+
+    <!-- Hero blurb -->
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:3rem 0">
+      <div class="container">
+        <div style="max-width:42rem">
+          <div style="display:flex;align-items:center;gap:0.5rem;color:var(--muted-fg);font-size:0.875rem;margin-bottom:0.75rem">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <span>Our mission</span>
+          </div>
+          <h1 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:500;margin-bottom:1rem">About the Virtual Voice Archive</h1>
+          <p style="color:var(--muted-fg);font-size:1.0625rem;line-height:1.75">
+            The Virtual Voice Archive is a community-maintained digital library dedicated to documenting and preserving non-human synthetic voices — the TTS engines, speech synthesizers, and virtual assistants that shaped how computers learned to speak.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body sections -->
+    <div style="padding:3rem 0">
+      <div class="container">
+        <div style="max-width:42rem;margin:0 auto">
+
+          <!-- What We Do -->
+          <div class="card" style="margin-bottom:2rem">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue-600);flex-shrink:0">
+                  <rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">What We Do</h2>
+              </div>
+              <p style="color:var(--muted-fg);line-height:1.75;margin-bottom:1rem">
+                We collect, catalogue, and preserve synthetic voices before they are updated, deprecated, or lost to time. Every entry in the archive includes a technical record of the voice's origin, platform, and characteristics, alongside a simulated audio sample to document its sound.
+              </p>
+              <p style="color:var(--muted-fg);line-height:1.75">
+                The archive spans more than four decades of speech synthesis history — from 1982 DOS-era formant engines and classic hardware synthesizers to modern open-source neural voice models supporting over one hundred languages.
+              </p>
+            </div>
+          </div>
+
+          <!-- Why It Matters -->
+          <div class="card" style="margin-bottom:2rem">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--emerald-600);flex-shrink:0">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">Why It Matters</h2>
+              </div>
+              <p style="color:var(--muted-fg);line-height:1.75;margin-bottom:1rem">
+                Synthetic voices are cultural artefacts. The flat cadence of Microsoft Sam, the resonant bass of DECtalk's Huge Harry, and the whispered breath of Wendy are as much a part of computing history as the hardware they ran on — yet they are routinely lost when software is discontinued or servers shut down.
+              </p>
+              <p style="color:var(--muted-fg);line-height:1.75">
+                Preserving these voices keeps the record of human–computer interaction intact. They document how speech synthesis technology evolved, who built it, why it sounded the way it did, and how it shaped the ways people have related to machines over the past half-century.
+              </p>
+            </div>
+          </div>
+
+          <!-- Scope & Principles -->
+          <div class="card">
+            <div style="padding:2rem">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--amber-600);flex-shrink:0">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <h2 style="font-size:1.125rem;font-weight:500">Scope &amp; Principles</h2>
+              </div>
+              <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.625rem">
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">The archive covers non-human synthetic voices only — no recordings of human speakers.</li>
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">All entries are documented for educational, historical, and preservation purposes.</li>
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">The archive is static, non-commercial, and carries no advertising.</li>
+                <li style="font-size:0.9375rem;color:var(--muted-fg)">Contributions are welcome from anyone with knowledge of a voice system not yet catalogued.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-about -->
+
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+<script>
+/* ------------------------------------------------------------------
+   DATA
+------------------------------------------------------------------ */
+const ALL_VOICES = [
+  // ── Arabic (ar_JO) ──
+  { title:"ar_JO-kareem-low",                   speaker:"Piper TTS Arabic (Jordanian)",   description:"Jordanian Arabic male voice Kareem at the low quality tier. Compact model suitable for offline and resource-constrained environments.",                           date:"Released: 2023", duration:"Sample: 0:42", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"ar_JO-kareem-medium",                speaker:"Piper TTS Arabic (Jordanian)",   description:"Jordanian Arabic male voice Kareem at medium quality. Clear pronunciation and natural prosody for Arabic-language applications.",                                date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  // ── Catalan (ca_ES) ──
+  { title:"ca_ES-upc_ona-x_low",                speaker:"Piper TTS Catalan",              description:"Catalan female voice Ona from the UPC corpus at ultra-low quality. Extremely lightweight for IoT and embedded Catalan-language systems.",                          date:"Released: 2023", duration:"Sample: 0:35", location:"Piper v1.1.0", category:"European Voices" },
+  { title:"ca_ES-upc_ona-medium",               speaker:"Piper TTS Catalan",              description:"Catalan female voice Ona from the UPC dataset at medium quality. Natural intonation for Catalan language accessibility and navigation applications.",              date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"ca_ES-upc_pau-x_low",                speaker:"Piper TTS Catalan",              description:"Catalan male voice Pau from the UPC corpus at ultra-low quality. Minimal footprint for offline Catalan speech synthesis on constrained hardware.",                 date:"Released: 2023", duration:"Sample: 0:36", location:"Piper v1.1.0", category:"European Voices" },
+  // ── Czech (cs_CZ) ──
+  { title:"cs_CZ-jirka-low",                    speaker:"Piper TTS Czech",                description:"Czech male voice Jirka at low quality tier. Efficient model for basic Czech text-to-speech on embedded systems.",                                                  date:"Released: 2023", duration:"Sample: 0:40", location:"Piper v1.1.0", category:"Slavic Voices" },
+  { title:"cs_CZ-jirka-medium",                 speaker:"Piper TTS Czech",                description:"Czech male voice Jirka at medium quality. Clear articulation and proper diacritical pronunciation for Czech-language applications.",                               date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Slavic Voices" },
+  // ── Welsh (cy_GB) ──
+  { title:"cy_GB-bu_tts-medium",                speaker:"Piper TTS Welsh",                description:"Welsh voice from the BU TTS corpus at medium quality. Authentic Welsh pronunciation supporting this critically preserved Celtic language.",                         date:"Released: 2023", duration:"Sample: 0:46", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"cy_GB-gwryw_gogleddol-medium",       speaker:"Piper TTS Welsh",                description:"Northern Welsh male voice at medium quality. Captures the distinct phonology of North Welsh dialects for language preservation purposes.",                          date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"European Voices" },
+  // ── Danish (da_DK) ──
+  { title:"da_DK-talesyntese-medium",           speaker:"Piper TTS Danish",               description:"Danish voice from the Talesyntese dataset at medium quality. Natural Danish prosody suitable for accessibility tools and voice interfaces.",                         date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"European Voices" },
+  // ── German (de_DE) ──
+  { title:"de_DE-eva_k-x_low",                  speaker:"Piper TTS German",               description:"German female voice Eva K at ultra-low quality. Extremely compact model for resource-constrained German-language devices.",                                       date:"Released: 2022", duration:"Sample: 0:32", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-karlsson-low",                 speaker:"Piper TTS German",               description:"German male voice Karlsson at low quality. Lightweight synthesis for embedded German TTS applications.",                                                          date:"Released: 2022", duration:"Sample: 0:40", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-kerstin-low",                  speaker:"Piper TTS German",               description:"German female voice Kerstin at low quality tier. Efficient model retaining natural female vocal characteristics for German synthesis.",                            date:"Released: 2022", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-mls-medium",                   speaker:"Piper TTS German",               description:"German voice from the Multilingual LibriSpeech dataset at medium quality. Well-rounded pronunciation for general German TTS use.",                                 date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"de_DE-pavoque-low",                  speaker:"Piper TTS German",               description:"German voice from the PAVOQUE expressive speech corpus. Trained for expressive and prosodically varied German synthesis at a compact low quality tier.",          date:"Released: 2022", duration:"Sample: 0:45", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-ramona-low",                   speaker:"Piper TTS German",               description:"German female voice Ramona at low quality. Compact and accessible model for offline German language applications.",                                               date:"Released: 2022", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-thorsten-low",                 speaker:"Piper TTS German",               description:"German male voice Thorsten at low quality. Community-developed voice widely used across open-source German TTS deployments.",                                     date:"Released: 2022", duration:"Sample: 0:42", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"de_DE-thorsten-medium",              speaker:"Piper TTS German",               description:"German male voice Thorsten at medium quality. Clear articulation and natural intonation — a flagship of open-source German speech synthesis.",                     date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"de_DE-thorsten-high",                speaker:"Piper TTS German",               description:"German male voice Thorsten at high quality. Premium synthesis with excellent prosody for audiobook narration and professional German TTS.",                        date:"Released: 2023", duration:"Sample: 1:10", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"de_DE-thorsten_emotional-medium",    speaker:"Piper TTS German",               description:"Expressive German male voice Thorsten at medium quality. Supports varied emotional prosody for interactive and conversational applications.",                       date:"Released: 2023", duration:"Sample: 1:00", location:"Piper v1.2.0", category:"European Voices" },
+  // ── Greek (el_GR) ──
+  { title:"el_GR-rapunzelina-low",              speaker:"Piper TTS Greek",                description:"Greek female voice Rapunzelina at low quality. Supports Modern Greek synthesis for accessibility and educational applications.",                                  date:"Released: 2023", duration:"Sample: 0:40", location:"Piper v1.1.0", category:"European Voices" },
+  // ── English GB (en_GB) ──
+  { title:"en_GB-alan-low",                     speaker:"Piper TTS English (UK)",         description:"British English male voice Alan at low quality. Compact received-pronunciation model for lightweight UK English TTS deployments.",                               date:"Released: 2022", duration:"Sample: 0:40", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_GB-alan-medium",                  speaker:"Piper TTS English (UK)",         description:"British English male voice Alan at medium quality. Clear received pronunciation ideal for professional and accessibility applications.",                           date:"Released: 2023", duration:"Sample: 0:55", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-alba-medium",                  speaker:"Piper TTS English (UK)",         description:"British English female voice Alba at medium quality. Natural intonation and warm vocal character for UK English applications.",                                    date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-aru-medium",                   speaker:"Piper TTS English (UK)",         description:"British English voice Aru at medium quality. Versatile UK English synthesis for virtual assistants and content narration.",                                       date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-cori-medium",                  speaker:"Piper TTS English (UK)",         description:"British English female voice Cori at medium quality. Crisp pronunciation suited for navigation systems and voice interfaces.",                                     date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-cori-high",                    speaker:"Piper TTS English (UK)",         description:"British English female voice Cori at high quality. Premium UK English synthesis with excellent naturalness for audiobook narration.",                             date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-jenny_dioco-medium",           speaker:"Piper TTS English (UK)",         description:"British English voice Jenny Dioco at medium quality. Friendly and expressive character well-suited for interactive UK English applications.",                      date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-northern_english_male-medium", speaker:"Piper TTS English (UK)",         description:"Northern British English male voice at medium quality. Captures Northern English accent characteristics for regional language representation.",                     date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-semaine-medium",               speaker:"Piper TTS English (UK)",         description:"British English voice from the SEMAINE emotionally expressive dataset. Trained on multi-speaker affective speech data for nuanced synthesis.",                    date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-southern_english_female-low",  speaker:"Piper TTS English (UK)",         description:"Southern British English female voice at low quality. Authentic southern accent in a compact, efficient model format.",                                           date:"Released: 2022", duration:"Sample: 0:42", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_GB-vctk-medium",                  speaker:"Piper TTS English (UK)",         description:"British English multi-speaker voice from the VCTK corpus at medium quality. Diverse speaker characteristics across UK regional accents.",                         date:"Released: 2023", duration:"Sample: 0:55", location:"Piper v1.2.0", category:"English Voices" },
+  // ── English US (en_US) ──
+  { title:"en_US-amy-low",                      speaker:"Piper TTS English (US)",         description:"American English female voice Amy at low quality. Lightweight model optimized for embedded systems and edge computing.",                                          date:"Released: 2022", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_US-amy-medium",                   speaker:"Piper TTS English (US)",         description:"American English female voice Amy at medium quality. Natural-sounding synthesis for general-purpose US English applications.",                                    date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-arctic-medium",                speaker:"Piper TTS English (US)",         description:"American English voice from the CMU ARCTIC dataset at medium quality. Phonetically balanced speech for research and accessibility applications.",                 date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-bryce-medium",                 speaker:"Piper TTS English (US)",         description:"American English male voice Bryce at medium quality. Conversational tone suited for virtual assistants and narration systems.",                                  date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-danny-low",                    speaker:"Piper TTS English (US)",         description:"American English male voice Danny at low quality. Compact model for resource-constrained US English TTS deployments.",                                           date:"Released: 2022", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_US-hfc_female-medium",            speaker:"Piper TTS English (US)",         description:"American English HFC female voice at medium quality. High-fidelity characteristics with clear articulation for professional use.",                                date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-hfc_male-medium",              speaker:"Piper TTS English (US)",         description:"American English HFC male voice at medium quality. High-fidelity male vocal synthesis for professional and commercial applications.",                             date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-joe-medium",                   speaker:"Piper TTS English (US)",         description:"American English male voice Joe at medium quality. Friendly and approachable vocal character for interactive applications.",                                     date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-john-medium",                  speaker:"Piper TTS English (US)",         description:"American English male voice John at medium quality. Clear and authoritative vocal presence for narration and accessibility tools.",                               date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-kathleen-low",                 speaker:"Piper TTS English (US)",         description:"American English female voice Kathleen at low quality. Efficient synthesis for embedded American English TTS applications.",                                     date:"Released: 2022", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_US-kristin-medium",               speaker:"Piper TTS English (US)",         description:"American English female voice Kristin at medium quality. Warm and natural synthesis for content delivery and virtual assistant applications.",                    date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-kusal-medium",                 speaker:"Piper TTS English (US)",         description:"American English voice Kusal at medium quality. Versatile synthesis for a wide range of US English text-to-speech applications.",                                date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-l2arctic-medium",              speaker:"Piper TTS English (US)",         description:"American English voice from the L2-ARCTIC corpus at medium quality. Trained on non-native English speech data for diverse phonetic coverage.",                   date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-lessac-low",                   speaker:"Piper TTS English (US)",         description:"American English Lessac voice at low quality. Lightweight version of the classic Lessac-trained synthesis system.",                                             date:"Released: 2022", duration:"Sample: 0:40", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_US-lessac-medium",                speaker:"Piper TTS English (US)",         description:"American English Lessac voice at medium quality. High-quality synthesis based on the LessAC dataset, optimized for general-purpose TTS applications.",          date:"Released: 2023", duration:"Sample: 0:45", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-lessac-high",                  speaker:"Piper TTS English (US)",         description:"American English Lessac voice at high quality. Premium LessAC-dataset synthesis for professional narration and high-fidelity TTS applications.",                date:"Released: 2023", duration:"Sample: 1:00", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-libritts-high",                speaker:"Piper TTS LibriTTS",             description:"American English LibriTTS voice at high quality. Premium synthesis trained on the extensive LibriTTS corpus for audiobook-quality narration.",                   date:"Released: 2023", duration:"Sample: 1:20", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-libritts_r-medium",            speaker:"Piper TTS LibriTTS-R",           description:"American English LibriTTS-R voice at medium quality. Trained on the restored and enhanced LibriTTS-R corpus for improved naturalness.",                          date:"Released: 2023", duration:"Sample: 0:55", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-ljspeech-medium",              speaker:"Piper TTS English (US)",         description:"American English LJSpeech voice at medium quality. Trained on the benchmark LJSpeech corpus, widely used in TTS research and evaluation.",                     date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-ljspeech-high",                speaker:"Piper TTS English (US)",         description:"American English LJSpeech voice at high quality. Premium synthesis from the classic LJSpeech dataset for high-fidelity professional narration.",               date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-norman-medium",                speaker:"Piper TTS English (US)",         description:"American English male voice Norman at medium quality. Reliable and clear US English synthesis for accessibility and navigation use.",                            date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-reza_ibrahim-medium",          speaker:"Piper TTS English (US)",         description:"American English voice Reza Ibrahim at medium quality. Diverse vocal characteristics contributing to phonetic variety in US English synthesis.",                date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-ryan-low",                     speaker:"Piper TTS English (US)",         description:"American English male voice Ryan at low quality. Compact version of the popular Ryan voice model for lightweight deployment.",                                  date:"Released: 2022", duration:"Sample: 0:40", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_US-ryan-medium",                  speaker:"Piper TTS English (US)",         description:"American English male voice Ryan at medium quality. Warm conversational tone well-suited for virtual assistants and navigation systems.",                        date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-ryan-high",                    speaker:"Piper TTS English (US)",         description:"American English male voice Ryan at high quality. Premium synthesis for professional narration with excellent naturalness and prosody.",                         date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-sam-medium",                   speaker:"Piper TTS English (US)",         description:"American English voice Sam at medium quality. Balanced and clear US English synthesis for a wide range of TTS applications.",                                   date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"English Voices" },
+  // ── Spanish AR (es_AR) ──
+  { title:"es_AR-daniela-high",                 speaker:"Piper TTS Spanish (Argentina)",  description:"Argentine Spanish female voice Daniela at high quality. Premium Rioplatense Spanish synthesis with authentic Argentine pronunciation.",                            date:"Released: 2023", duration:"Sample: 1:00", location:"Piper v1.2.0", category:"Spanish Voices" },
+  // ── Spanish ES (es_ES) ──
+  { title:"es_ES-carlfm-x_low",                 speaker:"Piper TTS Spanish (Spain)",      description:"Castilian Spanish voice carlfm at ultra-low quality. Extremely lightweight model for IoT and resource-constrained Spanish TTS environments.",                     date:"Released: 2022", duration:"Sample: 0:35", location:"Piper v1.0.0", category:"Spanish Voices" },
+  { title:"es_ES-davefx-medium",                speaker:"Piper TTS Spanish (Spain)",      description:"Castilian Spanish voice davefx at medium quality. Clear European Spanish pronunciation for accessibility and content applications.",                              date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Spanish Voices" },
+  { title:"es_ES-mls_10246-low",                speaker:"Piper TTS Spanish (Spain)",      description:"Castilian Spanish MLS speaker 10246 at low quality. From the Multilingual LibriSpeech corpus, efficient for lightweight Spanish synthesis.",                      date:"Released: 2023", duration:"Sample: 0:42", location:"Piper v1.1.0", category:"Spanish Voices" },
+  { title:"es_ES-mls_9972-low",                 speaker:"Piper TTS Spanish (Spain)",      description:"Castilian Spanish MLS speaker 9972 at low quality. Compact MLS-derived voice for offline Castilian Spanish deployment.",                                         date:"Released: 2023", duration:"Sample: 0:42", location:"Piper v1.1.0", category:"Spanish Voices" },
+  { title:"es_ES-sharvard-medium",              speaker:"Piper TTS Spanish (Spain)",      description:"Castilian Spanish voice sharvard at medium quality. Natural European Spanish synthesis for voice interfaces and narration.",                                     date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Spanish Voices" },
+  // ── Spanish MX (es_MX) ──
+  { title:"es_MX-ald-medium",                   speaker:"Piper TTS Spanish (Mexico)",     description:"Mexican Spanish voice ald at medium quality. Authentic Latin American Spanish synthesis with proper Mexican prosody and intonation.",                             date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Spanish Voices" },
+  { title:"es_MX-claude-high",                  speaker:"Piper TTS Spanish (Mexico)",     description:"Mexican Spanish voice Claude at high quality. Premium Mexican Spanish synthesis with excellent naturalness and regional authenticity.",                           date:"Released: 2023", duration:"Sample: 1:00", location:"Piper v1.2.0", category:"Spanish Voices" },
+  // ── Farsi (fa_IR) ──
+  { title:"fa_IR-amir-medium",                  speaker:"Piper TTS Persian (Farsi)",      description:"Persian male voice Amir at medium quality. Natural Iranian Persian synthesis with proper phonology for Farsi TTS applications.",                                 date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"fa_IR-ganji-medium",                 speaker:"Piper TTS Persian (Farsi)",      description:"Persian voice Ganji at medium quality. Authentic Farsi pronunciation and prosody for Iranian Persian language applications.",                                     date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"fa_IR-ganji_adabi-medium",           speaker:"Piper TTS Persian (Farsi)",      description:"Persian literary voice Ganji Adabi at medium quality. Formal register pronunciation suited for literary and educational Farsi synthesis.",                        date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"fa_IR-gyro-medium",                  speaker:"Piper TTS Persian (Farsi)",      description:"Persian voice Gyro at medium quality. Versatile Iranian Persian synthesis for a range of Farsi text-to-speech use cases.",                                       date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"fa_IR-reza_ibrahim-medium",          speaker:"Piper TTS Persian (Farsi)",      description:"Persian voice Reza Ibrahim at medium quality. Distinctive vocal characteristics contributing to Farsi speaker diversity in the archive.",                         date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+
+  // ── DECtalk Voices ──
+  { title:"Perfect Paul",                        speaker:"DECtalk (Digital Equipment Corp)", description:"The default DECtalk voice, based on recordings of MIT researcher Dennis Klatt's own voice. Became famous as the voice of Stephen Hawking and used widely in accessibility technology, NOAA Weather Radio, and pop culture.",                                                                date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Beautiful Betty",                     speaker:"DECtalk (Digital Equipment Corp)", description:"A female DECtalk voice modelled after Dennis Klatt's wife. One of the original nine built-in voices shipped with the DECtalk DTC01 in 1984, offering a distinct feminine vocal character through formant synthesis.",                                                                      date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Huge Harry",                          speaker:"DECtalk (Digital Equipment Corp)", description:"A deep, bass DECtalk voice known for its authoritative tone. Widely used in ATIS airport weather broadcasts and recognised as one of the most distinctive of the nine original DECtalk voices.",                                                                                           date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Frail Frank",                         speaker:"DECtalk (Digital Equipment Corp)", description:"An elderly-sounding male DECtalk voice, one of the original nine formant-synthesised voices included in the 1984 DTC01 hardware unit. Designed to represent a fragile, aged vocal character.",                                                                                           date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Kit the Kid",                         speaker:"DECtalk (Digital Equipment Corp)", description:"A child-like DECtalk voice modelled after Dennis Klatt's daughter. One of the original nine voices in the 1984 DTC01, providing a higher-pitched youthful vocal character via formant synthesis.",                                                                                       date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Rough Rita",                          speaker:"DECtalk (Digital Equipment Corp)", description:"A rough-textured female DECtalk voice, one of the nine built-in voices from the 1984 DTC01 hardware synthesizer. Produced through formant synthesis with adjusted vocal tract parameters.",                                                                                               date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Uppity Ursula",                       speaker:"DECtalk (Digital Equipment Corp)", description:"A high-pitched female DECtalk voice included in the original 1984 DTC01 unit. One of the nine named formant synthesis voices that made DECtalk a landmark in accessible, versatile speech technology.",                                                                                   date:"Released: 1984", duration:"Sample: 0:30", location:"DECtalk DTC01 / Access32",       category:"Legacy Engines" },
+  { title:"Doctor Dennis",                       speaker:"DECtalk (Digital Equipment Corp)", description:"An authoritative male DECtalk voice added in version 2.0 of the DTC01 firmware. Named in homage to DECtalk creator Dennis Klatt, this voice represented a cleaner, more professional vocal register.",                                                                                   date:"Released: 1985", duration:"Sample: 0:30", location:"DECtalk DTC01 v2.0",             category:"Legacy Engines" },
+  { title:"Whispering Wendy",                    speaker:"DECtalk (Digital Equipment Corp)", description:"A whispery, breathy DECtalk voice added in version 2.0 of the DTC01 firmware. Demonstrated the flexibility of formant synthesis by modelling a quieter, airflow-heavy vocal style.",                                                                                                     date:"Released: 1985", duration:"Sample: 0:30", location:"DECtalk DTC01 v2.0",             category:"Legacy Engines" },
+
+  // ── Lernout & Hauspie ──
+  { title:"L&H TruVoice American English",       speaker:"Lernout & Hauspie",               description:"The flagship American English TTS engine from Belgian speech technology company Lernout & Hauspie, widely bundled with Microsoft Agent and Windows 98/2000/XP. Based on diphone/triphone concatenation, it became one of the most-heard voices of the late 1990s PC era before L&H's 2001 bankruptcy.",        date:"Released: ~1996", duration:"Sample: 0:35", location:"Windows 98 / Microsoft Agent (SAPI4)", category:"Legacy Engines" },
+  { title:"L&H TTS3000",                         speaker:"Lernout & Hauspie",               description:"Lernout & Hauspie's high-end TTS3000 engine for business and consumer electronics, supporting over 17 languages including English, German, French, Spanish, Dutch, Italian, and Korean. Used parameterised segment concatenation and was available as a SAPI4 voice for Microsoft Agent characters.",              date:"Released: ~1997", duration:"Sample: 0:40", location:"Windows 9x / Microsoft Agent (SAPI4)", category:"Legacy Engines" },
+
+  // ── Centigram TruVoice ──
+  { title:"Centigram TruVoice",                  speaker:"Centigram Communications",        description:"An advanced text-to-speech engine developed by Centigram Communications Corporation of San Jose, CA. Supported American English, Latin American Spanish, German, French, and Italian, with an email/spreadsheet preprocessor and navigational pause/resume. Widely deployed in telephony and interactive voice response systems in the 1990s.", date:"Released: ~1995", duration:"Sample: 0:35", location:"Windows / Telephony / IVR",        category:"Legacy Engines" },
+
+  // ── First Byte / Monologue ──
+  { title:"Monologue (First Byte)",              speaker:"First Byte Software",             description:"A DOS text-to-speech engine by First Byte Software, successor to their SmoothTalker product from 1984. The Monologue engine powered Creative Labs' Dr. Sbaitso bundled with Sound Blaster cards in the early 1990s, making it one of the first TTS engines most PC users ever heard.",                          date:"Released: ~1991", duration:"Sample: 0:30", location:"MS-DOS / Sound Blaster",         category:"Legacy Engines" },
+
+  // ── eSpeak ──
+  { title:"eSpeak 1.48",                         speaker:"Jonathan Duddington",             description:"The last stable release of the original eSpeak open-source formant speech synthesizer by Jonathan Duddington, supporting over 70 languages. Originally written for RISC OS in 1995 as 'Speak', rewritten in 2007 as eSpeak. Compact, fast, and free — it was recommended by Microsoft and used by Google Translate for 27 languages in 2010.", date:"Released: 2014", duration:"Sample: 0:40", location:"Windows / Linux / SAPI5",         category:"Legacy Engines" },
+  { title:"eSpeak NG",                           speaker:"Reece H. Dunn (eSpeak NG Project)", description:"The community-maintained Next Generation fork of Jonathan Duddington's eSpeak, launched in December 2015. Supports over 100 languages and accents with Klatt formant synthesis and MBROLA backend support. Included in NVDA, Android, and major Linux distributions as a default accessible TTS engine.",     date:"Released: 2016", duration:"Sample: 0:40", location:"Windows / Linux / Android / SAPI5", category:"Legacy Engines" },
+
+  // ── Microsoft Legacy TTS ──
+  { title:"Microsoft Sam (SAPI4)",               speaker:"Microsoft",                       description:"The iconic robotic male voice built into Windows 2000 and available for Windows 98 via the SAPI4 SDK. Developed using formant synthesis, Microsoft Sam became a cornerstone of early PC accessibility and later achieved viral internet fame through meme videos and the Speakonia TTS program.",                  date:"Released: 1999", duration:"Sample: 0:30", location:"Windows 2000 / SAPI4",           category:"Legacy Engines" },
+  { title:"Microsoft Sam (SAPI5)",               speaker:"Microsoft",                       description:"The SAPI5 version of Microsoft Sam, shipping as the default Narrator voice in Windows XP. Though slightly different in character from the SAPI4 version, it shared the same iconic robotic quality. The SAPI5 SDK also introduced the optional Microsoft Mike and Microsoft Mary voices.",                         date:"Released: 2001", duration:"Sample: 0:30", location:"Windows XP / SAPI5",            category:"Legacy Engines" },
+  { title:"Microsoft Mike",                      speaker:"Microsoft",                       description:"An optional male SAPI5 TTS voice released alongside the Windows XP era, available as a free download from Microsoft. Provided a slightly different vocal character from Microsoft Sam, and was bundled in the SAPI5 SDK for developers.",                                                                            date:"Released: 2001", duration:"Sample: 0:30", location:"Windows XP / SAPI5",            category:"Legacy Engines" },
+  { title:"Microsoft Mary",                      speaker:"Microsoft",                       description:"An optional female SAPI5 TTS voice released in the Windows XP era as a free Microsoft download. One of the earliest female voices in the Microsoft TTS ecosystem, compatible back to Windows 98 via the SAPI5 runtime.",                                                                                           date:"Released: 2001", duration:"Sample: 0:30", location:"Windows XP / SAPI5",            category:"Legacy Engines" },
+
+  // ── S.A.M. (Software Automatic Mouth) ──
+  { title:"S.A.M. (Software Automatic Mouth)",   speaker:"Don't Ask Software / Mark Barton", description:"One of the first commercial all-software speech synthesizers, developed by Mark Barton and published by Don't Ask Software in 1982 for the Commodore 64, Atari 8-bit, and Apple II. Used formant synthesis to convert English text to phonemes and then to speech, and served as the basis for the original MacInTalk on the Apple Macintosh.", date:"Released: 1982", duration:"Sample: 0:25", location:"Commodore 64 / Atari 8-bit / Apple II", category:"Legacy Engines" },
+];
+
+
+
+/* ------------------------------------------------------------------
+   RANDOM SPOTLIGHT — one voice picked per real category each call
+------------------------------------------------------------------ */
+const REAL_CATS = ["English Voices","European Voices","Slavic Voices","Spanish Voices","Middle Eastern Voices","Legacy Engines"];
+
+function randomSpotlight(count) {
+  const pool = [];
+  // Shuffle a copy of REAL_CATS so category order varies
+  const cats = [...REAL_CATS].sort(() => Math.random() - 0.5);
+  // Round-robin across categories until we have `count` voices
+  let ci = 0;
+  while (pool.length < count) {
+    const cat = cats[ci % cats.length];
+    const voices = ALL_VOICES.filter(v => v.category === cat);
+    if (voices.length) {
+      pool.push(voices[Math.floor(Math.random() * voices.length)]);
+    }
+    ci++;
+    if (ci > count * REAL_CATS.length) break; // safety
+  }
+  return pool.slice(0, count);
+}
+
+// Generated fresh on each renderHome call — stored so click handlers can reference them
+let SPOTLIGHT_FEATURED = [];
+let SPOTLIGHT_RECENT   = [];
+
+const CATEGORIES = [
+  { title:"English Voices",        count:37, filterKey:"English Voices",        colorClass:"ic-blue",    icon: svgGlobe() },
+  { title:"European Voices",       count:17, filterKey:"European Voices",       colorClass:"ic-emerald", icon: svgCpu() },
+  { title:"Slavic Voices",         count:2,  filterKey:"Slavic Voices",         colorClass:"ic-purple",  icon: svgMic() },
+  { title:"Spanish Voices",        count:8,  filterKey:"Spanish Voices",        colorClass:"ic-amber",   icon: svgRadio() },
+  { title:"Middle Eastern Voices", count:7,  filterKey:"Middle Eastern Voices", colorClass:"ic-pink",    icon: svgBot() },
+  { title:"Legacy Engines",        count:20, filterKey:"Legacy Engines",        colorClass:"ic-red",     icon: svgClock() },
+  { title:"Neural Models",         count:71, filterKey:"All Categories",        colorClass:"ic-indigo",  icon: svgZap() },
+  { title:"Open Source",           count:71, filterKey:"All Categories",        colorClass:"ic-rose",    icon: svgBook() },
+];
+
+const BROWSE_CATS = ["All Categories","English Voices","European Voices","Slavic Voices","Spanish Voices","Middle Eastern Voices","Legacy Engines"];
+
+/* ------------------------------------------------------------------
+   STATE
+------------------------------------------------------------------ */
+let currentPage     = "home";
+let selectedVoice   = null;
+let browseCategory  = "All Categories";
+let filteredCache   = [];
+
+let isPlaying     = false;
+let playInterval  = null;
+let playProgress  = 0;   // 0-100
+
+/* ------------------------------------------------------------------
+   NAVIGATION
+------------------------------------------------------------------ */
+function nav(page, category) {
+  stopAudio();
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+  currentPage = page;
+
+  if (page === "home") {
+    document.getElementById("page-home").classList.add("active");
+    // Don't auto-clear search — let user see results if they came back
+  } else if (page === "browse") {
+    if (category !== undefined) browseCategory = category;
+    document.getElementById("page-browse").classList.add("active");
+    document.getElementById("browseSearchInput").value = "";
+    renderBadges();
+    renderBrowseGrid();
+  } else if (page === "detail") {
+    document.getElementById("page-detail").classList.add("active");
+    populateDetail();
+  } else if (page === "contribute") {
+    document.getElementById("page-contribute").classList.add("active");
+  } else if (page === "about") {
+    document.getElementById("page-about").classList.add("active");
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function openVoice(voice) {
+  selectedVoice = voice;
+  nav("detail");
+}
+
+/* ------------------------------------------------------------------
+   HERO SEARCH
+------------------------------------------------------------------ */
+function heroSearch() {
+  const q = document.getElementById("heroSearchInput").value.trim();
+  if (!q) return;
+
+  const ql = q.toLowerCase();
+  const results = ALL_VOICES.filter(v =>
+    [v.title, v.speaker, v.description, v.category].some(s => s.toLowerCase().includes(ql))
+  );
+
+  const section   = document.getElementById("homeSearchSection");
+  const heading   = document.getElementById("homeSearchHeading");
+  const sub       = document.getElementById("homeSearchSub");
+  const grid      = document.getElementById("homeSearchGrid");
+  const noResults = document.getElementById("homeNoResults");
+
+  heading.textContent = `Results for "${q}"`;
+  sub.textContent     = results.length > 0
+    ? `Found ${results.length} ${results.length === 1 ? "voice" : "voices"} matching your search`
+    : "";
+
+  if (results.length === 0) {
+    grid.innerHTML      = "";
+    grid.style.display  = "none";
+    noResults.style.display = "block";
+  } else {
+    noResults.style.display = "none";
+    grid.style.display  = "";
+    // Store results for click handler
+    window._homeSearchResults = results;
+    grid.innerHTML = results.map((v, i) => voiceCardHTML(v, `openHomeSearchVoice(${i})`)).join("");
+  }
+
+  section.classList.add("visible");
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function clearHeroSearch() {
+  document.getElementById("heroSearchInput").value = "";
+  document.getElementById("homeSearchSection").classList.remove("visible");
+  window._homeSearchResults = [];
+}
+
+function openHomeSearchVoice(i) {
+  openVoice(window._homeSearchResults[i]);
+}
+
+/* ------------------------------------------------------------------
+   SVG HELPERS
+------------------------------------------------------------------ */
+function mkSvg(paths) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+}
+function svgGlobe()  { return mkSvg('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'); }
+function svgCpu()    { return mkSvg('<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M20 15h2M9 2v2M9 20v2M2 9h2M20 9h2"/>'); }
+function svgPhone()  { return mkSvg('<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>'); }
+function svgMic()    { return mkSvg('<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>'); }
+function svgBot()    { return mkSvg('<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>'); }
+function svgRadio()  { return mkSvg('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>'); }
+function svgZap()    { return mkSvg('<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>'); }
+function svgBook()   { return mkSvg('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'); }
+function svgCal()    { return mkSvg('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>'); }
+function svgClock()  { return mkSvg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'); }
+function svgPin()    { return mkSvg('<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>'); }
+function svgPlay()   { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><polygon points="6 3 20 12 6 21 6 3"/></svg>`; }
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* ------------------------------------------------------------------
+   VOICE CARD
+------------------------------------------------------------------ */
+function voiceCardHTML(voice, clickExpr) {
+  return `
+    <div class="card voice-card" onclick="${clickExpr}" style="cursor:pointer">
+      <div class="vc-header">
+        <div class="vc-top">
+          <span class="badge badge-solid">${esc(voice.category)}</span>
+          <button class="btn btn-outline btn-icon" onclick="event.stopPropagation()" title="Play sample" style="flex-shrink:0">
+            ${svgPlay()}
+          </button>
+        </div>
+        <div class="vc-title">${esc(voice.title)}</div>
+        <div class="vc-speaker">${esc(voice.speaker)}</div>
+      </div>
+      <div class="vc-body">
+        <p class="vc-desc">${esc(voice.description)}</p>
+        <div class="vc-meta">
+          <span>${svgCal()}${esc(voice.date)}</span>
+          <span>${svgClock()}${esc(voice.duration)}</span>
+          <span>${svgPin()}${esc(voice.location)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------
+   HOME RENDERING
+------------------------------------------------------------------ */
+function renderHome() {
+  // Category cards
+  document.getElementById("homeCatGrid").innerHTML =
+    CATEGORIES.map(c => `
+      <div class="cat-card" onclick="nav('browse','${esc(c.filterKey)}')">
+        <div class="cat-icon-wrap ${c.colorClass}">${c.icon}</div>
+        <div class="cat-name">${esc(c.title)}</div>
+        <div class="cat-count-label">${c.count} voices</div>
+      </div>
+    `).join("");
+
+  // Generate fresh random spotlights each render
+  SPOTLIGHT_FEATURED = randomSpotlight(4);
+  SPOTLIGHT_RECENT   = randomSpotlight(4);
+
+  // Featured tab
+  document.getElementById("featuredGrid").innerHTML =
+    SPOTLIGHT_FEATURED.map((v,i) => voiceCardHTML(v, `openFeaturedVoice(${i})`)).join("");
+
+  // Recent tab
+  document.getElementById("recentGrid").innerHTML =
+    SPOTLIGHT_RECENT.map((v,i) => voiceCardHTML(v, `openRecentVoice(${i})`)).join("");
+}
+
+function openFeaturedVoice(i){ openVoice(SPOTLIGHT_FEATURED[i]); }
+function openRecentVoice(i)  { openVoice(SPOTLIGHT_RECENT[i]); }
+
+/* ------------------------------------------------------------------
+   TAB SWITCHING
+------------------------------------------------------------------ */
+function switchTab(tab) {
+  const isFeat = tab === "featured";
+  document.getElementById("tabFeatured").classList.toggle("active",  isFeat);
+  document.getElementById("tabRecent").classList.toggle("active",   !isFeat);
+  document.getElementById("panelFeatured").classList.toggle("active", isFeat);
+  document.getElementById("panelRecent").classList.toggle("active",  !isFeat);
+}
+
+/* ------------------------------------------------------------------
+   BROWSE PAGE
+------------------------------------------------------------------ */
+function renderBadges() {
+  document.getElementById("browseBadgeRow").innerHTML =
+    BROWSE_CATS.map(cat => {
+      const active = cat === browseCategory ? "active" : "";
+      return `<span class="badge badge-outline badge-filter ${active}" onclick="setBrowseCat('${esc(cat)}')">${esc(cat)}</span>`;
+    }).join("");
+}
+
+function setBrowseCat(cat) {
+  browseCategory = cat;
+  renderBadges();
+  renderBrowseGrid();
+}
+
+function renderBrowseGrid() {
+  const q    = (document.getElementById("browseSearchInput").value || "").toLowerCase();
+  const sort = document.getElementById("browseSortSelect").value;
+
+  let filtered = ALL_VOICES.filter(v => {
+    const catOk    = browseCategory === "All Categories" || v.category === browseCategory;
+    const searchOk = !q || [v.title, v.speaker, v.description].some(s => s.toLowerCase().includes(q));
+    return catOk && searchOk;
+  });
+
+  filtered = [...filtered].sort((a, b) => {
+    if (sort === "oldest") return a.date.localeCompare(b.date);
+    if (sort === "name")   return a.title.localeCompare(b.title);
+    return b.date.localeCompare(a.date);
+  });
+
+  filteredCache = filtered;
+
+  const grid      = document.getElementById("browseGrid");
+  const noResults = document.getElementById("browseNoResults");
+  const countEl   = document.getElementById("browseCount");
+
+  const label = browseCategory !== "All Categories" ? ` in ${browseCategory}` : "";
+  countEl.textContent = `Showing ${filtered.length} ${filtered.length === 1 ? "voice" : "voices"}${label}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = "";
+    grid.style.display = "none";
+    noResults.style.display = "block";
+  } else {
+    noResults.style.display = "none";
+    grid.style.display = "";
+    grid.innerHTML = filtered.map((v,i) => voiceCardHTML(v, `openBrowseVoice(${i})`)).join("");
+  }
+}
+
+function openBrowseVoice(i) { openVoice(filteredCache[i]); }
+
+function clearBrowse() {
+  browseCategory = "All Categories";
+  document.getElementById("browseSearchInput").value = "";
+  renderBadges();
+  renderBrowseGrid();
+}
+
+/* ------------------------------------------------------------------
+   DETAIL PAGE
+------------------------------------------------------------------ */
+function populateDetail() {
+  if (!selectedVoice) return;
+  const v = selectedVoice;
+
+  setText("dCategory",   v.category);
+  setText("dTitle",      v.title);
+  setText("dSpeaker",    v.speaker);
+  setText("dDate",       v.date);
+  setText("dDuration",   v.duration);
+  setText("dLocation",   v.location);
+  setText("dDesc",       v.description);
+  setText("apTitle",     v.title);
+  setText("apSub",       v.speaker);
+  setText("specCategory",v.category);
+  setText("specPlatform",v.location);
+  setText("usagePlatform",
+    `This voice was originally designed for ${v.location}. The archived sample has been preserved in its original format for historical accuracy.`
+  );
+  setText("usageAttribution",
+    `When using these archived samples, please credit the Virtual Voice Archive and reference the original ${v.speaker}.`
+  );
+
+  // Reset audio player
+  playProgress = 0;
+  isPlaying    = false;
+  document.getElementById("apFill").style.width = "0%";
+  document.getElementById("apTime").textContent = `0:00 / ${v.duration.replace("Sample: ","")}`;
+  setPlayIcon(false);
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ------------------------------------------------------------------
+   AUDIO PLAYER (simulated)
+------------------------------------------------------------------ */
+function togglePlay() {
+  isPlaying = !isPlaying;
+  setPlayIcon(isPlaying);
+
+  if (isPlaying) {
+    playInterval = setInterval(() => {
+      playProgress += 100 / 600; // ~10 seconds per full progress tick at 60fps simulation
+      if (playProgress >= 100) {
+        playProgress = 0;
+        isPlaying    = false;
+        setPlayIcon(false);
+        clearInterval(playInterval);
+      }
+      document.getElementById("apFill").style.width = playProgress + "%";
+      updateAudioTime();
+    }, 100);
+  } else {
+    clearInterval(playInterval);
+  }
+}
+
+function updateAudioTime() {
+  if (!selectedVoice) return;
+  const dStr  = selectedVoice.duration.replace("Sample: ", "");
+  const parts = dStr.split(":");
+  const total = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  const done  = Math.floor(total * playProgress / 100);
+  const m     = Math.floor(done / 60);
+  const s     = done % 60;
+  document.getElementById("apTime").textContent = `${m}:${String(s).padStart(2,"0")} / ${dStr}`;
+}
+
+function seekAudio(e) {
+  const bar  = document.getElementById("apBar");
+  const rect = bar.getBoundingClientRect();
+  playProgress = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+  document.getElementById("apFill").style.width = playProgress + "%";
+  updateAudioTime();
+}
+
+function setPlayIcon(playing) {
+  const btn = document.getElementById("apPlayBtn");
+  if (!btn) return;
+  if (playing) {
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <rect x="6"  y="4" width="4" height="16"/>
+      <rect x="14" y="4" width="4" height="16"/>
+    </svg>`;
+  } else {
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <polygon points="6 3 20 12 6 21 6 3"/>
+    </svg>`;
+  }
+}
+
+function stopAudio() {
+  clearInterval(playInterval);
+  isPlaying    = false;
+  playProgress = 0;
+}
+
+/* ------------------------------------------------------------------
+   MOBILE MENU
+------------------------------------------------------------------ */
+function toggleMobileMenu() {
+  document.getElementById("mobileMenu").classList.toggle("open");
+}
+function closeMobileMenu() {
+  document.getElementById("mobileMenu").classList.remove("open");
+}
+
+/* ------------------------------------------------------------------
+   INIT
+------------------------------------------------------------------ */
+renderHome();
+</script>
+</body>
+</html>
